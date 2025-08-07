@@ -54,6 +54,7 @@ exports.createPost = async (req, res) => {
 exports.getPostsByUser = async (req, res) => {
   try {
     const { userId } = req.params;
+    console.log(userId)
     const posts = await Post.find({ author: userId })
       .populate('author', 'name email bio')
       .sort({ createdAt: -1 });

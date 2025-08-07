@@ -13,12 +13,14 @@ const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 const corsOptions = {
-  origin: ['http://localhost:3000', 'https://task-gold-one.vercel.app'],
+  origin: ['http://localhost:5173', 'https://task-gold-one.vercel.app'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 };
 
-app.use(cors(corsOptions));
+app.use(cors
+  (corsOptions)
+);
 app.use(express.json());
 
 // Connect to MongoDB

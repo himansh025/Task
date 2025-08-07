@@ -8,7 +8,7 @@ const {upload}= require("../middleware/multer")
 
 router.post('/create', authMiddleware, upload.single('image'), postController.createPost);
 router.get('/', postController.getAllPosts);
-router.get('/:id', postController.getPostsByUser);
+router.get('/:userId', postController.getPostsByUser);
 router.delete('/delete/:id', postController.deletePost);
 
 module.exports = router;
