@@ -1,8 +1,6 @@
 const express = require('express');
 const authMiddleware = require('../middleware/auth');
-const { register, login } = require('../controller/userController');
-const { logout } = require('../../front/src/store/authSlicer');
-
+const { register, login ,logout} = require('../controller/userController');
 const router = express.Router();
 
 // Register
