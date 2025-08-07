@@ -3,9 +3,11 @@ import { useSelector } from 'react-redux';
 import PostCard from '../components/PostCard';
 import { User, Edit, Save, X } from 'lucide-react';
 import axiosInstance from '../config/apiconfig';
+import { useMemo } from 'react';
 
 export default function Profile() {
   const { user } = useSelector((state) => state.auth);
+
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -16,9 +18,9 @@ export default function Profile() {
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar || '');
 
   const fetchUserPosts = async () => {
+    setLoading(true)
     try {
       const res = await axiosInstance.get(`/posts/${user._id}`);
-      console.log(res)
       setPosts(res.data.posts || []);
     } catch (error) {
       console.error('Error fetching posts:', error);
@@ -27,38 +29,61 @@ export default function Profile() {
     }
   };
 
+  useMemo(()=>{
+
+  },[formData])
+
   useEffect(() => {
-    if (user?._id) {
+    if (user) {
       fetchUserPosts();
     }
   }, [user]);
 
-  const handleUpdateProfile = async (e) => {
-     const file = e.target.files[0];
-    if (!file) return;
-      const form = new FormData();
-    form.append('avatar', file);
-    try {
-      await axiosInstance.put('/users/profile', form,{
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      setEditing(false);
-    } catch (error) {
-      console.error('Error updating profile:', error);
-    }
-  };
+ const handleUpdateProfile = async () => {
+  setLoading(true)
+  const form = new FormData();
+  form.append('name', formData.name);
+  form.append('bio', formData.bio);
+  if (formData.avatar) {
+    form.append('avatar', formData.avatar);
+  }
 
+  try {
+    await axiosInstance.put('/users/profile', form, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    setEditing(false);
+  } catch (error) {
+    console.error('Error updating profile:', error);
+  }finally{
+    setLoading(false)
+  }
+};
 
+  
+  const handleImageChange = (e) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    setFormData((prev) => ({ ...prev, avatar: file }));
+    setAvatarPreview(URL.createObjectURL(file)); // for preview
+  }
+};
   const handleDeletePost = async (postId) => {
     try {
+      setLoading(true)
+
       await axiosInstance.delete(`/posts/user/delete/${postId}`);
       setPosts((prev) => prev.filter((post) => post._id !== postId));
     } catch (error) {
       console.error('Error deleting post:', error);
+    }finally{
+      setLoading(false)
     }
   };
+
+
 
   const handleCancel = () => {
     setFormData({ name: user?.name || '', bio: user?.bio || '' });
@@ -68,16 +93,16 @@ export default function Profile() {
   if (!user) return null;
 
   return (
-    <div className="max-w-2xl mt-20 lg:mt-0 mx-auto space-y-6">
+    <div className="max-w-2xl mt-20 lg:mt-0 mx-auto px-4 space-y-6">
       {/* Profile Section */}
       <div className="bg-white border rounded-lg shadow-sm p-6">
-        <div className="flex items-start space-x-4">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-4">
           {/* Avatar */}
-          <div className="w-16 h-16 rounded-full overflow-hidden border bg-gray-100 flex-shrink-0">
+          <div className="w-20 h-20 rounded-full overflow-hidden border bg-gray-100 flex-shrink-0 mx-auto sm:mx-0">
             {avatarPreview ? (
               <img src={avatarPreview} alt="Avatar" className="object-cover w-full h-full" />
             ) : (
-              <User className="w-8 h-8 m-auto text-blue-600" />
+              <User className="w-8 h-8 m-auto mt-4  text-blue-600" />
             )}
           </div>
 
@@ -91,7 +116,7 @@ export default function Profile() {
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full mt-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                    className="w-full mt-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
                   />
                 </div>
 
@@ -102,41 +127,45 @@ export default function Profile() {
                     rows={3}
                     value={formData.bio}
                     onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                    className="w-full mt-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 resize-none"
+                    className="w-full mt-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 resize-none text-sm"
                   />
                 </div>
 
-                {/* Avatar Upload */}
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Profile Image</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="w-full mt-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+                {/* Profile Image */}
+         {/* Profile Image */}
+<div>
+  <label className="text-sm font-medium text-gray-700">Profile Image</label>
+  <input
+    type="file"
+    accept="image/*"
+    onChange={handleImageChange}
+    className="w-full mt-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+  />
+</div>
 
-                {/* Buttons */}
-                <div className="flex space-x-2">
-                  <button
-                    onClick={handleUpdateProfile}
-                    className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                  >
-                    <Save className="w-4 h-4" /> <span>Save</span>
-                  </button>
-                  <button
-                    onClick={handleCancel}
-                    className="flex items-center space-x-2 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
-                  >
-                    <X className="w-4 h-4" /> <span>Cancel</span>
-                  </button>
-                </div>
+{/* Buttons */}
+<div className="flex flex-col sm:flex-row gap-2">
+  <button
+    onClick={handleUpdateProfile}
+    className="flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+  >
+    <Save className="w-4 h-4" /> <span>Save</span>
+  </button>
+  <button
+    onClick={handleCancel}
+    className="flex items-center justify-center space-x-2 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+  >
+    <X className="w-4 h-4" /> <span>Cancel</span>
+  </button>
+</div>
+
               </div>
             ) : (
               <div>
                 <div className="flex justify-between items-start mb-2">
-                  <h2 className="text-2xl font-bold text-gray-900"> Name : {user.name}</h2>
+                  <h2 className="text-xl font-bold text-gray-900 break-words">
+                    Name: {user.name}
+                  </h2>
                   <button
                     onClick={() => setEditing(true)}
                     className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-1 hover:bg-gray-100 rounded-md"
@@ -144,8 +173,14 @@ export default function Profile() {
                     <Edit className="w-4 h-4" /> <span>Edit</span>
                   </button>
                 </div>
-                <p className="text-gray-600 mb-2"> Email : {user.email}</p>
-                {user.bio && <p className="text-gray-700">Bio : {user.bio}</p>}
+                <p className="text-gray-600 text-sm mb-2 break-words">
+                  Email: {user.email}
+                </p>
+                {user.bio && (
+                  <p className="text-gray-700 text-sm break-words">
+                    Bio: {user.bio}
+                  </p>
+                )}
               </div>
             )}
           </div>

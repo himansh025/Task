@@ -31,6 +31,7 @@ export default function Dashboard() {
   }, [user]);
 
   const handleCreatePost = async (formData) => {
+    setLoading(true)
     try {
       const res = await axiosInstance.post("/posts/create", formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -40,6 +41,8 @@ export default function Dashboard() {
       getAllPosts();
     } catch (error) {
       console.error("Error creating post:", error);
+    }finally{
+setLoading(false)
     }
   };
 
