@@ -81,3 +81,8 @@ exports.updateUserProfile = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+exports.logout = (req, res) => {
+  res.clearCookie('token'); // If using cookies
+  res.status(200).json({ message: 'Logged out successfully' });
+};
